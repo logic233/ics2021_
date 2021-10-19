@@ -41,6 +41,9 @@ static int cmd_help(char *args);
 
 static int cmd_si(char *args);
 
+static int cmd_info(char *args);
+
+static int cmd_x(char *args);
 
 static struct {
   const char *name;
@@ -48,9 +51,11 @@ static struct {
   int (*handler) (char *);
 } cmd_table [] = {
   { "help", "Display informations about all supported commands", cmd_help },
-  { "c", "Continue the execution of the program", cmd_c },
-  { "q", "Exit NEMU", cmd_q },
-  { "si","Do [N](default 1) steps and pasue,",cmd_si}
+  { "c", "   Continue the execution of the program", cmd_c },
+  { "q", "   Exit NEMU", cmd_q },
+  { "si","  si [N] steps (default 1)",cmd_si},
+  {"info","info SUBCMD\n\t r: Print state of Register\n\t w: Print info of WatchPoint",cmd_info},
+  {"x","   x N EXPR\n\t Get the result of EXPR; Begin with result, Output n 4 Bytes",cmd_x}
 
   /* TODO: Add more commands */
 
@@ -92,7 +97,35 @@ static int cmd_si(char *args) {
   cpu_exec(times);
   return 0;
 }
+static int cmd_info(char *args) {
+  /* extract the first argument */
+  char *arg = strtok(NULL, " ");
+  if(strcmp(arg,"r") == 0){
+    isa_reg_display();
+    return 0;
+  }
+  if(strcmp(arg,"w") == 0){
+    printf("w\n");
+    return 0;
+  }
+  printf("Unknown command '%s'\n", arg);
+  return 0;
+}
 
+static int cmd_x(char *args) {
+  /* extract the first argument */
+  char *arg = strtok(NULL, " ");
+  if(strcmp(arg,"r")){
+    printf("r");
+    return 0;
+  }
+  if(strcmp(arg,"w")){
+    printf("w");
+    return 0;
+  }
+  printf("Unknown command '%s'\n", arg);
+  return 0;
+}
 
 void sdb_set_batch_mode() {
   is_batch_mode = true;
