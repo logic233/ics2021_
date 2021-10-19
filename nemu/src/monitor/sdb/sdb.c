@@ -2,6 +2,7 @@
 #include <cpu/cpu.h>
 #include <readline/readline.h>
 #include <readline/history.h>
+#include <memory/vaddr.h>
 #include "sdb.h"
 
 static int is_batch_mode = false;
@@ -113,17 +114,22 @@ static int cmd_info(char *args) {
 }
 
 static int cmd_x(char *args) {
-  /* extract the first argument */
+  //like x 10 0x80000000
+  //could see x n add_begin
+  /* extract the first and second argument */
+  //i'm lazy,so the user must keep args right
   char *arg = strtok(NULL, " ");
-  if(strcmp(arg,"r")){
-    printf("r");
-    return 0;
+  uint32_t n=atoi(arg);
+
+  arg = strtok(NULL, " ");
+  char *ptr;
+  int address=strtoul(arg,&ptr,16);
+  for(int i=0;i<n;i++){
+    printf("RAM[0x%x]: 0x%x\n",address,vaddr_read(address,4));
+    //printf("RAM[0x%x]",address);
+    address++;
   }
-  if(strcmp(arg,"w")){
-    printf("w");
-    return 0;
-  }
-  printf("Unknown command '%s'\n", arg);
+  //printf("Unknown command '%s'\n", arg);
   return 0;
 }
 
