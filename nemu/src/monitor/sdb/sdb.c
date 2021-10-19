@@ -39,6 +39,9 @@ static int cmd_q(char *args) {
 
 static int cmd_help(char *args);
 
+static int cmd_si(char *args);
+
+
 static struct {
   const char *name;
   const char *description;
@@ -47,6 +50,7 @@ static struct {
   { "help", "Display informations about all supported commands", cmd_help },
   { "c", "Continue the execution of the program", cmd_c },
   { "q", "Exit NEMU", cmd_q },
+  { "si","Do [N](default 1) steps and pasue,",cmd_si}
 
   /* TODO: Add more commands */
 
@@ -76,6 +80,19 @@ static int cmd_help(char *args) {
   }
   return 0;
 }
+
+static int cmd_si(char *args) {
+  /* extract the first argument */
+  char *arg = strtok(NULL, " ");
+  int times;
+  if(arg == NULL)
+    times=1;
+  else
+    times=atoi(arg);
+  cpu_exec(times);
+  return 0;
+}
+
 
 void sdb_set_batch_mode() {
   is_batch_mode = true;
