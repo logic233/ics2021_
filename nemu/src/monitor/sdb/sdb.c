@@ -125,9 +125,9 @@ static int cmd_x(char *args) {
   char *ptr;
   int address=strtoul(arg,&ptr,16);
   for(int i=0;i<n;i++){
-    printf("RAM[0x%x]: 0x%x\n",address,vaddr_read(address,4));
+    printf("RAM[0x%x]: 0x%02x\n",address,vaddr_read(address,1));
     //printf("RAM[0x%x]",address);
-    address++;
+    address+=1;
   }
   //printf("Unknown command '%s'\n", arg);
   return 0;
