@@ -46,6 +46,8 @@ static int cmd_info(char *args);
 
 static int cmd_x(char *args);
 
+static int cmd_test(char *args);
+
 static struct {
   const char *name;
   const char *description;
@@ -56,8 +58,8 @@ static struct {
   { "q", "   Exit NEMU", cmd_q },
   { "si","  si [N] steps (default 1)",cmd_si},
   {"info","info SUBCMD\n\t r: Print state of Register\n\t w: Print info of WatchPoint",cmd_info},
-  {"x","   x N EXPR\n\t Get the result of EXPR; Begin with result, Output n 4 Bytes",cmd_x}
-
+  {"x","   x N EXPR\n\t Get the result of EXPR; Begin with result, Output n 4 Bytes",cmd_x},
+  {"test","   test EXPR\n\t Get the answer of EXPR\n",cmd_test}
   /* TODO: Add more commands */
 
 };
@@ -133,6 +135,17 @@ static int cmd_x(char *args) {
   return 0;
 }
 
+static int cmd_test(char *args) {
+  /* extract the first argument */
+  char *arg = strtok(NULL, "\0");
+  bool success;
+  int ans=expr(arg,&success);
+  if(success)
+    printf("ans is %u\n",ans);
+  else 
+    printf("\tERROR!\n");
+  return 0;
+}
 void sdb_set_batch_mode() {
   is_batch_mode = true;
 }

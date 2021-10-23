@@ -16,9 +16,53 @@ static char *code_format =
 "  return 0; "
 "}";
 
-static void gen_rand_expr() {
-  buf[0] = '\0';
+int pos = 0;
+#define NUM_LEN_MAX 3
+#define EXPR_LEN_MAX 30
+//int len; 
+int gen_expr =0;
+static void gen(char c){
+  //if (pos>EXPR_LEN_MAX) return;
+  
+  buf[pos++]=c;
 }
+
+
+static void gen_num(){
+  int len = rand()% (NUM_LEN_MAX-1)+1;
+  for(int i=0;i<len;i++){
+    int num_single = rand()%10;
+    if (num_single == 0 && i == 0)num_single = rand()%9 +1 ;
+    gen('0'+num_single);
+  }
+}
+static void gen_rand_op(){
+  int op = rand() % 4 ;
+  switch(op){
+    case 0:gen('+');break;
+    case 1:gen('-');break;
+    case 2:gen('*');break;
+    case 3:gen('/');break;
+  } 
+}
+
+static void gen_rand_expr() {
+  int choose = rand()%3;
+  gen_expr++;
+  if(gen_expr > EXPR_LEN_MAX )choose = 0 ;
+  if(gen_expr < 2)choose = 2 ;
+  switch(choose){
+    case 0: gen_num();break;
+    case 1: gen('('); gen_rand_expr(); gen(')'); break;
+    default: gen_rand_expr(); gen_rand_op(); gen_rand_expr(); break;
+  }
+}
+
+void init_gen(){
+  pos = gen_expr = 0 ;
+}
+
+
 
 int main(int argc, char *argv[]) {
   int seed = time(0);
@@ -29,8 +73,12 @@ int main(int argc, char *argv[]) {
   }
   int i;
   for (i = 0; i < loop; i ++) {
+    // input buff from begin
+    init_gen();
     gen_rand_expr();
-
+    buf[pos]='\0';
+    
+    //printf("%s\n",buf);
     sprintf(code_buf, code_format, buf);
 
     FILE *fp = fopen("/tmp/.code.c", "w");
