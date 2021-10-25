@@ -4,13 +4,18 @@
  * Type 'man regex' for more information about POSIX regex functions.
  */
 #include <regex.h>
+#include <memory/vaddr.h>
+//对给定字符串求值
+word_t expr(char *e, bool *success);
 
+//token's type
 enum {
-  TK_NOTYPE = 256, TK_EQ,TK_NUM
+  TK_NOTYPE = 256, TK_EQ,TK_NUM,TK_16,TK_DEREF
   /* TODO: Add more token types */
   	
 };
 
+//每一条规则对应的正则表达式和token's type
 static struct rule {
   const char *regex;
   int token_type;
@@ -21,6 +26,9 @@ static struct rule {
    */
 
   {" +", TK_NOTYPE},    // spaces
+  {"^0x[0-9]+",TK_16},
+  {"^\\$(\\S)+",'$'},
+
 
   {"[0-9]+", TK_NUM},    // num:257
 
@@ -31,7 +39,8 @@ static struct rule {
   {"\\(", '('},         // bracket_left
   {"\\)", ')'},         // bracket_right
 
-  {"==", TK_EQ}        // equal
+  {"==", TK_EQ},        // equal
+
 };
 
 #define NR_REGEX ARRLEN(rules)
@@ -54,7 +63,7 @@ void init_regex() {
     }
   }
 }
-
+//存放一个识别出来的token
 typedef struct token {
   int type;
   char str[32];
@@ -94,8 +103,11 @@ static bool make_token(char *e) {
           //ignore ==
           case TK_EQ: 
             break;
+          case '$':
+          //不管16进制还是10进制，存下来就行了
+          case TK_16:
           case TK_NUM: 
-            tokens[nr_token].type=rules[i].token_type;
+            tokens[nr_token].type = rules[i].token_type;
             //to avoid overflow
             if (substr_len>30)
                substr_len=30;
@@ -121,7 +133,7 @@ static bool make_token(char *e) {
 
   return true;
 }
-
+//找到主操作符
 int find_main(int p,int q)
 {
   int left_p=0;
@@ -138,6 +150,7 @@ int find_main(int p,int q)
   }
   return ans;
 }
+//检查[p,q]段是否被括号包裹
 static bool check_parentheses(int p,int q){
   if(tokens[p].type=='('&&tokens[q].type==')'){
     int check=1;
@@ -153,7 +166,7 @@ static bool check_parentheses(int p,int q){
 }
 
 
-
+//计算 [p,q]之间的token所对应的值
 word_t eval(int p,int q, bool *success)
 {
   if (*success==false)return 0;
@@ -163,7 +176,16 @@ word_t eval(int p,int q, bool *success)
     return 0;
   }
   else if(p==q){
+    if (tokens[p].type == TK_NUM)
     return atoi(tokens[p].str);
+    int x;
+    sscanf(tokens[p].str,"%x",&x);
+    return x;
+  }
+  //开头是 TK_DEREF * 的 
+  else if(tokens[p].type == TK_DEREF){
+    int address = eval(p+1,q,success);
+    return vaddr_read(address,1);
   }
   else if(check_parentheses(p,q)){
     return eval(p+1,q-1,success);
@@ -192,12 +214,37 @@ word_t eval(int p,int q, bool *success)
   return 0;
 }
 
+void del_token(int obj){
+  if(obj<0||obj>=nr_token)return ;
+  for(int i=obj+1;i<nr_token;i++){
+    tokens[i-1] = tokens[i];
+  }
+  nr_token--;
+}
+
 word_t expr(char *e, bool *success) {
   if (!make_token(e)) {
     *success = false;
     return 0;
   }
   printf("make_token[%d] has finished!\n",nr_token);
+  
+  //处理一下 $t1 以及 *0x123434 之类的
+  for(int i=0;i<nr_token;i++){
+    if(tokens[i].type == '$'){
+      bool flag = true;
+      int val = isa_reg_str2val(tokens[i].str+1,&flag);
+      if(!flag)
+        printf("%s can't find\n",tokens[i].str); 
+      tokens[i].type = TK_16;
+      sprintf(tokens[i].str,"%x",val);
+    }
+    if(tokens[i].type == '*' &&
+        (i == 0 || (tokens[i-1].type<'a'&&tokens[i-1].type!=')') ) ){
+      tokens[i].type = TK_DEREF;
+    }
+  }
+
   *success = true;
   /* TODO: Insert codes to evaluate the expression. */
   return eval(0,nr_token-1,success);	

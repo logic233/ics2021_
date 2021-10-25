@@ -141,7 +141,7 @@ static int cmd_test(char *args) {
   bool success;
   int ans=expr(arg,&success);
   if(success)
-    printf("ans is %u\n",ans);
+    printf("ans is %u 0x%x\n",ans,ans);
   else 
     printf("\tERROR!\n");
   return 0;

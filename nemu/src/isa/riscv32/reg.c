@@ -7,6 +7,7 @@ const char *regs[] = {
   "a6", "a7", "s2", "s3", "s4", "s5", "s6", "s7",
   "s8", "s9", "s10", "s11", "t3", "t4", "t5", "t6"
 };
+#define REG_NUM 32
 
 void isa_reg_display() {
   printf("pc: %x\n",cpu.pc);
@@ -20,5 +21,13 @@ void isa_reg_display() {
 
 
 word_t isa_reg_str2val(const char *s, bool *success) {
+  for(int i=0;i<REG_NUM;i++){
+    if(strcmp(regs[i],s) == 0){
+      return cpu.gpr[i]._32;
+    }
+  }
+  if(strcmp("pc",s)==0)
+    return cpu.pc;
+  *success = false ;
   return 0;
 }
