@@ -3,6 +3,7 @@
 #include <cpu/difftest.h>
 #include <isa-all-instr.h>
 #include <locale.h>
+#include <../src/monitor/sdb/sdb.h>
 
 /* The assembly code of instructions executed is only output to the screen
  * when the number of instructions executed is less than this value.
@@ -95,14 +96,23 @@ void cpu_exec(uint64_t n) {
   }
 
   uint64_t timer_start = get_time();
-
+  
   Decode s;
+
+  bool wp_state ;
   for (;n > 0; n --) {
     fetch_decode_exec_updatepc(&s);
     g_nr_guest_instr ++;
     trace_and_difftest(&s, cpu.pc);
     if (nemu_state.state != NEMU_RUNNING) break;
     IFDEF(CONFIG_DEVICE, device_update());
+   
+    wp_state = debug_hook();
+    if(wp_state){
+      printf("[WP]Program execution has paused!\n");
+      nemu_state.state = NEMU_STOP;
+      break;
+    }
   }
 
   uint64_t timer_end = get_time();

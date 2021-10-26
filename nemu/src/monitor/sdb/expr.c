@@ -227,7 +227,7 @@ word_t expr(char *e, bool *success) {
     *success = false;
     return 0;
   }
-  printf("make_token[%d] has finished!\n",nr_token);
+  //printf("make_token[%d] has finished!\n",nr_token);
   
   //处理一下 $t1 以及 *0x123434 之类的
   for(int i=0;i<nr_token;i++){

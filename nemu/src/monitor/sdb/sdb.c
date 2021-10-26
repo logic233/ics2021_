@@ -48,6 +48,8 @@ static int cmd_x(char *args);
 
 static int cmd_test(char *args);
 
+static int cmd_wp(char *args);
+
 static struct {
   const char *name;
   const char *description;
@@ -59,6 +61,7 @@ static struct {
   { "si","  si [N] steps (default 1)",cmd_si},
   {"info","info SUBCMD\n\t r: Print state of Register\n\t w: Print info of WatchPoint",cmd_info},
   {"x","   x N EXPR\n\t Get the result of EXPR; Begin with result, Output n 4 Bytes",cmd_x},
+  {"wp","   wp op x\n\t i EXP: Create a WatchPoint\n\t d NO: Delete a WatchPoint",cmd_wp},
   {"test","   test EXPR\n\t Get the answer of EXPR\n",cmd_test}
   /* TODO: Add more commands */
 
@@ -74,13 +77,13 @@ static int cmd_help(char *args) {
   if (arg == NULL) {
     /* no argument given */
     for (i = 0; i < NR_CMD; i ++) {
-      printf("%s - %s\n", cmd_table[i].name, cmd_table[i].description);
+      printf("\033[34m%s\033[0m - %s\n", cmd_table[i].name, cmd_table[i].description);
     }
   }
   else {
     for (i = 0; i < NR_CMD; i ++) {
       if (strcmp(arg, cmd_table[i].name) == 0) {
-        printf("%s - %s\n", cmd_table[i].name, cmd_table[i].description);
+        printf("\033[34m%s\033[0m - %s\n", cmd_table[i].name, cmd_table[i].description);
         return 0;
       }
     }
@@ -108,7 +111,7 @@ static int cmd_info(char *args) {
     return 0;
   }
   if(strcmp(arg,"w") == 0){
-    printf("w\n");
+    print_worker();
     return 0;
   }
   printf("Unknown command '%s'\n", arg);
@@ -125,6 +128,7 @@ static int cmd_x(char *args) {
 
   arg = strtok(NULL, " ");
   char *ptr;
+  //16进制字符串转数字
   int address=strtoul(arg,&ptr,16);
   for(int i=0;i<n;i++){
     printf("RAM[0x%x]: 0x%02x\n",address,vaddr_read(address,1));
@@ -132,6 +136,24 @@ static int cmd_x(char *args) {
     address+=1;
   }
   //printf("Unknown command '%s'\n", arg);
+  return 0;
+}
+
+static int cmd_wp(char *args) {
+  char *arg = strtok(NULL, " ");
+  char op=arg[0];
+
+  arg = strtok(NULL, " ");
+  if (op == 'i'){
+    insert_wp(arg);
+    return 0;
+  }
+  if (op == 'd'){
+    int n = atoi(arg);
+    free_wp(n);
+    return 0;
+  }
+  printf("Unkown OP !\n");
   return 0;
 }
 
